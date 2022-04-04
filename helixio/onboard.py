@@ -375,7 +375,7 @@ class Agent:
         except ActionError as error:
             self.report_error(error._result.result_str)
 
-        while abs(self.my_telem.geodetic[2] - self.comms.return_alt) > 0.5:
+        while abs(self.my_telem.geodetic[2] - self.comms.return_alt) > 0.4:
             await asyncio.sleep(1)
 
         try:
@@ -384,7 +384,19 @@ class Agent:
             )
         except ActionError as error:
             self.report_error(error._result.result_str)
-
+# added to start of flocking ---------------------------------------------------------------------------------------      
+        while abs(self.my_telem.geodetic[0]-self.mission_lat)> 0.01 or abs(self.my_telem.geodetic[1]-self.mission_long)>0.01 or abs(self.my_telem.geodetic[2]-self.comms.return_alt)>0.4:
+            await asyncio.sleep(1)
+        
+        try:
+            await self.drone.action.goto_location(
+                self.mission_lat, self.mission_long, self.mission_alt, 0
+            )
+        except ActionError as error:
+            self.report_error(error._result.result_str)
+            
+        
+# -------------------------------------------------------------------------------------------------------------------
         await self.start_offboard(self.drone)
 
         # End of Init the drone
