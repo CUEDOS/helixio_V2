@@ -354,6 +354,8 @@ class App:
                 str(self.sitl_swarm_size),
                 "-w",
                 "hough_end",
+                "-m",
+                "plane",
             ],
             cwd=self.path_label.cget("text") + "/Tools/",
             stdin=None,

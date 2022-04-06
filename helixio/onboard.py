@@ -7,7 +7,7 @@ import asyncio
 import flocking
 from mavsdk import System
 from mavsdk.action import ActionError
-from mavsdk.offboard import OffboardError, VelocityNedYaw
+from mavsdk.offboard import OffboardError, VelocityNedYaw, Attitude
 import pymap3d as pm
 from communication import DroneCommunication
 from data_structures import AgentTelemetry
@@ -197,17 +197,17 @@ class Experiment:
         desired_vel = (
             self.k_lane_cohesion * v_lane_cohesion
             + self.k_migration * v_migration
-            + self.k_rotation * v_rotation
             + self.k_separation * v_separation
+            # + self.k_rotation * v_rotation
         )
 
         # NOTE maybe add lane cohesion as well so we point the right way when coming from far away
-        yaw = flocking.get_desired_yaw(v_migration[0], v_migration[1])
+        yaw = flocking.get_desired_yaw(desired_vel[0], desired_vel[1])
 
-        output_vel = flocking.check_velocity(
-            desired_vel, my_telem, max_speed, yaw, time_step, max_accel
-        )
-        return output_vel
+        # output_vel = flocking.check_velocity(
+        #     desired_vel, my_telem, max_speed, yaw, time_step, max_accel
+        # )
+        return yaw
 
 
 # Class containing all methods for the drones.
@@ -340,16 +340,16 @@ class Agent:
         ):
             offboard_loop_start_time = time.time()
 
-            await self.drone.offboard.set_velocity_ned(
-                self.experiment.path_following(
-                    CONST_DRONE_ID,
-                    self.comms.swarm_telemetry,
-                    self.my_telem,
-                    CONST_MAX_SPEED,
-                    offboard_loop_duration,
-                    5,
-                )
+            desired_yaw = self.experiment.path_following(
+                CONST_DRONE_ID,
+                self.comms.swarm_telemetry,
+                self.my_telem,
+                CONST_MAX_SPEED,
+                offboard_loop_duration,
+                5,
             )
+
+            await self.drone.offboard.set_attitude(Attitude(0.0, 0.0, desired_yaw, 0.8))
 
             # Checking frequency of the loop
             await asyncio.sleep(
