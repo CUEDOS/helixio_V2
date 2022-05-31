@@ -28,8 +28,9 @@ class Experiment:
         self.drone = drone
         self.least_distance = 2  # minimum allowed distance between two agents
         # Set up corridor variables
-        self.points = []
-        self.lane_radius = 0
+        self.points = [[]]
+        self.current_path=0 # number of curent path the drone should follow, it should be gotten from GCS like initial prestart points-----!!!!!
+        self.lane_radius = [] # should be a list ------!!!
 
         # Sensible defaults for gains
         self.k_migration = 1
@@ -38,7 +39,7 @@ class Experiment:
         self.k_rotation = 0.5
         self.k_separation = 2
 
-        self.directions = []
+        self.directions = [[]]
         self.current_index = 0
         self.target_point = np.array([0, 0, 0])
         self.target_direction = np.array([1, 1, 1])
@@ -47,75 +48,100 @@ class Experiment:
         corridor = json.loads(corridor_json)
         self.lane_radius = corridor["corridor_radius"]
         self.points = corridor["corridor_points"]
-        self.length = len(self.points)
+        self.length = [len(self.points[j]) for j in range(len(self.points))] # j is the number of a path
+        self.pass_permission=[1 for j in range(len(self.points))] # the permission to go to the next path
         self.create_directions()
         self.initial_nearest_point()
+        self.create_adjacent_points()
         self.ready_flag = True
         print("ready")
 
-    def create_directions(self) -> list:
-        for i in range(len(self.points)):
-            # All points must be converted to np arrays
-            self.points[i] = np.array(self.points[i])
+    def create_directions(self) -> None:
+        for j in range(len(self.points)):
+            for i in range(len(self.points[j])):
+                # All points must be converted to np arrays
+                self.points[j][i] = np.array(self.points[j][i])
 
-            if i == len(self.points) - 1:
-                self.directions.append(
-                    (self.points[0] - self.points[i])
-                    / np.linalg.norm(self.points[0] - self.points[i])
-                )
-            else:
-                self.directions.append(
-                    (self.points[i + 1] - self.points[i])
-                    / np.linalg.norm(self.points[i + 1] - self.points[i])
-                )
+                if i == len(self.points[j]) - 1:
+                    self.directions.append(
+                        (self.points[j][0] - self.points[j][i])
+                        / np.linalg.norm(self.points [j][0] - self.points[j][i])
+                    )
+                else:
+                    self.directions.append(
+                        (self.points[j][i + 1] - self.points[j][i])
+                        / np.linalg.norm(self.points[j][i + 1] - self.points[j][i])
+                    )
+    def create_adjacent_points(self) -> None: 
+        self.adjacent_points=[]
+        for j in range(len(self.points)-1):
+            self.adjacent_points.append({})
+            for i in range(len(self.points[j])):
+                for k in range(len(self.points[j+1])):
+                    distance=np.linalg.norm(self.points[j][i]-self.points[j][k])
+                    if distance<= self.lane_radius[j]+self.lane_radius[j+1]:
+                        pass_vector=self.points[j][i]-self.points[j+1][k]
+                        self.adjacent_points[j].update({i:[k,pass_vector]}) # jth dictionary is {adj. point of path j: [adj. point of j+1, vector from adj. point of path j to adj. point of j+1]}
 
-    def initial_nearest_point(self) -> int:
+    def initial_nearest_point(self) -> None:
         lnitial_least_distance = math.inf
-        for i in range(len(self.points)):
+        for i in range(len(self.points[self.current_path])):
             range_to_point_i = np.linalg.norm(
-                np.array(agent.my_telem.position_ned) - self.points[i]
+                np.array(agent.my_telem.position_ned) - self.points[self.current_path][i]
             )
             if range_to_point_i <= lnitial_least_distance:
                 lnitial_least_distance = range_to_point_i
-                self.current_index = i
+                self.current_index= i
+
+    def Swithch(self):
+        self.pass_permission[self.current_path]=0 # the agent is not allowed to get back to previous path anymore
+        self.current_index=self.adjacent_points[self.current_path][self.current_index][0] # now current index is a point of the next path
+        self.current_path+=1
+        self.target_point = self.points[self.current_path][self.current_index]
+        self.target_direction = self.directions[self.current_path][self.current_index]
 
     def path_following(
         self, drone_id, swarm_telem, my_telem, max_speed, time_step, max_accel
     ):
-        self.target_point = self.points[self.current_index]
-        self.target_direction = self.directions[self.current_index]
-        iterator = 0
+        self.target_point = self.points[self.current_path][self.current_index]
+        self.target_direction = self.directions[self.current_path][self.current_index]
+        if ((self.current_index in self.adjacent_points[self.current_path]) and self.pass_permission[self.current_path]==1):
+            pass_vector=self.adjacent_points[self.current_path][self.current_index][1]
+            range_to_current=np.array(agent.my_telem.position_ned)-self.points[self.current_path][self.current_index]
+            cos_of_angle=np.dot(pass_vector, range_to_current)/(np.linalg.norm(pass_vector)*np.inalg.norm(range_to_current))
+            if (cos_of_angle<=0.9):
+                self.Switch()
         # Finding the next bigger Index ----------
         range_to_next = (
             np.array(my_telem.position_ned)
-            - self.points[index_checker(self.current_index + 1, self.length)]
+            - self.points[self.current_path][index_checker(self.current_index + 1, self.length[self.current_path])]
         )
 
         if (
-            np.dot(range_to_next, self.directions[self.current_index]) > 0
+            np.dot(range_to_next, self.directions[self.current_path][self.current_index]) > 0
         ):  # drone has passed the point next to current one
-            self.current_index = index_checker(self.current_index + 1, len(self.points))
-            self.target_point = self.points[self.current_index]
-            self.target_direction = self.directions[self.current_index]
+            self.current_index = index_checker(self.current_index + 1, self.length[self.current_path])
+            self.target_point = self.points[self.current_path][self.current_index]
+            self.target_direction = self.directions[self.current_path][self.current_index]
             iterator = 0
             dot_fartherpoints = 0
             while dot_fartherpoints >= 0:  # Searching for farther points
                 iterator += 1
                 farther_point = index_checker(
-                    self.current_index + iterator, len(self.points)
+                    self.current_index + iterator, self.length[self.current_path]
                 )
                 range_to_farther_point = (
-                    np.array(my_telem.position_ned) - self.points[farther_point]
+                    np.array(my_telem.position_ned) - self.points[self.current_path][farther_point]
                 )
                 dot_fartherpoints = np.dot(
-                    range_to_farther_point, self.directions[farther_point - 1]
+                    range_to_farther_point, self.directions[self.current_path][farther_point - 1]
                 )
 
             self.current_index = (
                 farther_point - 1
             )  # farther_point here has negative dot product
-            self.target_point = self.points[self.current_index]
-            self.target_direction = self.directions[self.current_index]
+            self.target_point = self.points[self.current_path][self.current_index]
+            self.target_direction = self.directions[self.current_path][self.current_index]
 
         # Calculating migration velocity (normalized)---------------------
         limit_v_migration = 1
