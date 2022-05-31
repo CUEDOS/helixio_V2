@@ -79,8 +79,9 @@ class Experiment:
             for i in range(len(self.points[j])):
                 for k in range(len(self.points[j+1])):
                     distance=np.linalg.norm(self.points[j][i]-self.points[j][k])
-                    if distance<= self.lane_radius[j]+self.lane_radius[j+1]:
+                    if (distance<= self.lane_radius[j]+self.lane_radius[j+1] and np.dot(self.directions[j][i], self.directions[j][k])==1):
                         pass_vector=self.points[j][i]-self.points[j+1][k]
+                        pass_vector=pass_vector/np.linalg.norm(pass_vector)
                         self.adjacent_points[j].update({i:[k,pass_vector]}) # jth dictionary is {adj. point of path j: [adj. point of j+1, vector from adj. point of path j to adj. point of j+1]}
 
     def initial_nearest_point(self) -> None:
@@ -107,9 +108,10 @@ class Experiment:
         self.target_direction = self.directions[self.current_path][self.current_index]
         if ((self.current_index in self.adjacent_points[self.current_path]) and self.pass_permission[self.current_path]==1):
             pass_vector=self.adjacent_points[self.current_path][self.current_index][1]
-            range_to_current=np.array(agent.my_telem.position_ned)-self.points[self.current_path][self.current_index]
-            cos_of_angle=np.dot(pass_vector, range_to_current)/(np.linalg.norm(pass_vector)*np.inalg.norm(range_to_current))
-            if (cos_of_angle<=0.9):
+            lane_cohesion_position_error = self.target_point-np.array(agent.my_telem.position_ned)
+            lane_cohesion_position_error -= ( np.dot(lane_cohesion_position_error, self.target_direction)* self.target_direction)
+            cos_of_angle=np.dot(pass_vector, lane_cohesion_position_error)/(np.linalg.norm(pass_vector)*np.inalg.norm(lane_cohesion_position_error))
+            if (cos_of_angle>=0.9):
                 self.Switch()
         # Finding the next bigger Index ----------
         range_to_next = (
