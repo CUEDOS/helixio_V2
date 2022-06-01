@@ -43,6 +43,7 @@ class Experiment:
         self.current_index = 0
         self.target_point = np.array([0, 0, 0])
         self.target_direction = np.array([1, 1, 1])
+        self.rotation_factor=1
 
     def set_corridor(self, corridor_json):
         corridor = json.loads(corridor_json)
@@ -101,6 +102,7 @@ class Experiment:
         self.current_path+=1
         self.target_point = self.points[self.current_path][self.current_index]
         self.target_direction = self.directions[self.current_path][self.current_index]
+        self.rotation_factor*=-1
 
     def path_following(
         self, drone_id, swarm_telem, my_telem, max_speed, time_step, max_accel
