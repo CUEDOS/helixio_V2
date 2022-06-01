@@ -58,6 +58,7 @@ class Experiment:
 
     def create_directions(self) -> None:
         for j in range(len(self.points)):
+            self.directions.append([])
             for i in range(len(self.points[j])):
                 # All points must be converted to np arrays
                 self.points[j][i] = np.array(self.points[j][i])
