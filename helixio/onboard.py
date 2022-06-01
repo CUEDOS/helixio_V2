@@ -63,12 +63,12 @@ class Experiment:
                 self.points[j][i] = np.array(self.points[j][i])
 
                 if i == len(self.points[j]) - 1:
-                    self.directions.append(
+                    self.directions[j].append(
                         (self.points[j][0] - self.points[j][i])
                         / np.linalg.norm(self.points [j][0] - self.points[j][i])
                     )
                 else:
-                    self.directions.append(
+                    self.directions[j].append(
                         (self.points[j][i + 1] - self.points[j][i])
                         / np.linalg.norm(self.points[j][i + 1] - self.points[j][i])
                     )
