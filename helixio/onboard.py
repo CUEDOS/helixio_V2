@@ -184,7 +184,7 @@ class Experiment:
             )
 
         # Calculating v_rotation (normalized)---------------------
-        limit_v_rotation = 1
+        limit_v_rotation = self.rotation_factor*1
         if lane_cohesion_position_error_magnitude < self.lane_radius:
             v_rotation_magnitude = (
                 lane_cohesion_position_error_magnitude / self.lane_radius
