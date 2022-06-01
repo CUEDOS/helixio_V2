@@ -78,7 +78,7 @@ class Experiment:
             self.adjacent_points.append({})
             for i in range(len(self.points[j])):
                 for k in range(len(self.points[j+1])):
-                    distance=np.linalg.norm(self.points[j][i]-self.points[j][k])
+                    distance=np.linalg.norm(self.points[j][i]-self.points[j+1][k])
                     if (distance<= self.lane_radius[j]+self.lane_radius[j+1] and np.dot(self.directions[j][i], self.directions[j+1][k])==1):
                         pass_vector=self.points[j][i]-self.points[j+1][k]
                         pass_vector=pass_vector/np.linalg.norm(pass_vector)
