@@ -111,7 +111,7 @@ class Experiment:
             pass_vector=self.adjacent_points[self.current_path][self.current_index][1]
             lane_cohesion_position_error = self.target_point-np.array(agent.my_telem.position_ned)
             lane_cohesion_position_error -= ( np.dot(lane_cohesion_position_error, self.target_direction)* self.target_direction)
-            cos_of_angle=np.dot(pass_vector, lane_cohesion_position_error)/(np.linalg.norm(pass_vector)*np.inalg.norm(lane_cohesion_position_error))
+            cos_of_angle=np.dot(pass_vector, lane_cohesion_position_error)/(np.linalg.norm(pass_vector)*np.linalg.norm(lane_cohesion_position_error))
             if (cos_of_angle>=0.9):
                 self.Switch()
         # Finding the next bigger Index ----------
