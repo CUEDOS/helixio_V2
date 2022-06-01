@@ -79,7 +79,7 @@ class Experiment:
             for i in range(len(self.points[j])):
                 for k in range(len(self.points[j+1])):
                     distance=np.linalg.norm(self.points[j][i]-self.points[j][k])
-                    if (distance<= self.lane_radius[j]+self.lane_radius[j+1] and np.dot(self.directions[j][i], self.directions[j][k])==1):
+                    if (distance<= self.lane_radius[j]+self.lane_radius[j+1] and np.dot(self.directions[j][i], self.directions[j+1][k])==1):
                         pass_vector=self.points[j][i]-self.points[j+1][k]
                         pass_vector=pass_vector/np.linalg.norm(pass_vector)
                         self.adjacent_points[j].update({i:[k,pass_vector]}) # jth dictionary is {adj. point of path j: [adj. point of j+1, vector from adj. point of path j to adj. point of j+1]}
