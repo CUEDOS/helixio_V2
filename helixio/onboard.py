@@ -49,7 +49,7 @@ class Experiment:
         self.lane_radius = corridor["corridor_radius"]
         self.points = corridor["corridor_points"]
         self.length = [len(self.points[j]) for j in range(len(self.points))] # j is the number of a path
-        self.pass_permission=[1 for j in range(len(self.points))] # the permission to go to the next path
+        self.pass_permission=[1 for j in range(len(self.points)-1)] # the permission to go to the next path
         self.create_directions()
         self.initial_nearest_point()
         self.create_adjacent_points()
