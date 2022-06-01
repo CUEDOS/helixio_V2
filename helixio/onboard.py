@@ -106,7 +106,7 @@ class Experiment:
     ):
         self.target_point = self.points[self.current_path][self.current_index]
         self.target_direction = self.directions[self.current_path][self.current_index]
-        if ((self.current_index in self.adjacent_points[self.current_path]) and self.pass_permission[self.current_path]==1):
+        if ((self.current_path<= (len(current_drone.points)-2) and self.current_index in self.adjacent_points[self.current_path]) and self.pass_permission[self.current_path]==1): # ----!!! modification required
             pass_vector=self.adjacent_points[self.current_path][self.current_index][1]
             lane_cohesion_position_error = self.target_point-np.array(agent.my_telem.position_ned)
             lane_cohesion_position_error -= ( np.dot(lane_cohesion_position_error, self.target_direction)* self.target_direction)
