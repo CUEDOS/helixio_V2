@@ -184,7 +184,9 @@ def multi_visualizer (**Input):
         scene_aspectmode='manual',
         scene_aspectratio=dict(x=1, y=1, z=1), 
         scene = dict(xaxis = dict(nticks=Ticks_num,range=[x_right_margin,x_left_margin]), yaxis = dict(nticks=Ticks_num, range=[y_up_margin,y_down_margin]),zaxis = dict(nticks=Ticks_num,range=[z_down_margin,z_up_margin])),
-        legend_title_text='Drones & traces'
+        legend_title_text='Drones & traces',
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)'
         )
     #fig.layout.scene.camera.projection.type = "orthographic"
     fig.show()
