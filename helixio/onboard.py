@@ -13,7 +13,7 @@ from mavsdk.offboard import OffboardError, VelocityNedYaw
 import pymap3d as pm
 from communication import DroneCommunication
 from data_structures import AgentTelemetry
-from experiment import Experiment
+from example_position import Experiment
 import math
 import gtools
 import numpy as np
@@ -30,7 +30,7 @@ class Agent:
         self.load_parameters(parameters)
         self.swarm_manager = SwarmManager()
         self.swarm_manager.telemetry[self.id] = AgentTelemetry()
-        self.current_experiment = "convergence_S_to_N_NZ"
+        self.current_experiment = "example_position"
         self.return_alt: float = 10
         if self.logging == True:
             self.logger = setup_logger(self.id)
@@ -40,12 +40,12 @@ class Agent:
         print("setup done")
 
     async def run(self):
-        # self.drone: type[System] = System(
-        #     mavsdk_server_address="localhost", port=self.port
-        # )
+        self.drone: type[System] = System(
+            mavsdk_server_address="localhost", port=self.port
+        )
         await self.drone.connect()
-        self.drone: type[System] = System()
-        await self.drone.connect(system_address=self.serial_address)
+        #self.drone: type[System] = System()
+        #await self.drone.connect(system_address=self.serial_address)
         print("Waiting for drone to connect...")
         async for state in self.drone.core.connection_state():
             if state.is_connected:
@@ -62,7 +62,7 @@ class Agent:
         command_functions = {
             "arm": self.arm,
             "takeoff": self.takeoff,
-            "Experiment": self.run_experiment,
+            "Experiment": self.run_experiment, # start command
             "pre_start": self.pre_start,
             "hold": self.hold,
             "return": self.return_to_home,
@@ -125,6 +125,7 @@ class Agent:
             await self.drone.action.arm()
             self.home_lat = self.swarm_manager.telemetry[self.id].geodetic[0]
             self.home_long = self.swarm_manager.telemetry[self.id].geodetic[1]
+            self.home_alt = self.swarm_manager.telemetry[self.id].geodetic[2]
         except ActionError as error:
             self.report_error(error._result.result_str)
 
@@ -250,9 +251,9 @@ class Agent:
 
         print("experiments/" + self.current_experiment + ".json")
         self.experiment = Experiment(
-            self.id, self.swarm_manager.telemetry, experiment_file_path
+            self.id, self.swarm_manager.telemetry, experiment_file_path, self.home_lat, self.home_long, self.home_alt, self.ref_lat, self.ref_lon, self.ref_alt
         )
-
+        print("calling pre_start_positions")
         await asyncio.sleep(1)
 
         alt_dict = {}
@@ -260,7 +261,7 @@ class Agent:
         swarm_priorities = self.experiment.get_swarm_priorities(
             self.swarm_manager.telemetry
         )
-        self.experiment.get_path_and_permission(swarm_priorities)
+
         pre_start_positions = self.experiment.get_pre_start_positions(
             self.swarm_manager.telemetry, swarm_priorities
         )
@@ -285,20 +286,42 @@ class Agent:
         offboard_loop_duration = 0.1  # duration of each loop
 
         # Loop in which the velocity command outputs are generated
+        mission_start_time=self.swarm_manager.telemetry[self.id].current_time
         while (
             self.comms.current_command == "Experiment"
             and self.experiment.ready_flag == True
         ):
             offboard_loop_start_time = time.time()
-
-            await self.drone.offboard.set_velocity_ned(
-                self.experiment.path_following(
-                    self.swarm_manager.telemetry,
-                    self.max_speed,
-                    offboard_loop_duration,
-                    10,
+            if self.experiment.flight_mode == "velocity":
+                await self.drone.offboard.set_velocity_ned(
+                    self.experiment.path_following(
+                        self.swarm_manager.telemetry,
+                        self.max_speed,
+                        offboard_loop_duration,
+                        10,
+                        mission_start_time
+                    )
                 )
-            )
+            elif self.experiment.flight_mode == "acceleration":
+                await self.drone.offboard.set_acceleration_ned(
+                    self.experiment.path_following(
+                        self.swarm_manager.telemetry,
+                        self.max_speed,
+                        offboard_loop_duration,
+                        10,
+                        mission_start_time
+                    )
+                )
+            elif self.experiment.flight_mode=="position":
+                await self.drone.offboard.set_position_ned(
+                    self.experiment.path_following(
+                        self.swarm_manager.telemetry,
+                        self.max_speed,
+                        offboard_loop_duration,
+                        10,
+                        mission_start_time
+                    )
+                )
 
             await self.check_altitude()
 

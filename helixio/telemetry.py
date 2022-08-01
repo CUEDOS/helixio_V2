@@ -1,7 +1,7 @@
 from __future__ import annotations  # compatibility with older python versions than 3.9
 import asyncio
 import time
-from mavsdk import System
+from mavsdk import System 
 from mavsdk.action import ActionError
 from mavsdk.offboard import OffboardError, VelocityNedYaw
 import pymap3d as pm
@@ -78,7 +78,6 @@ class TelemetryUpdater:
         self.id = id
         self.drone = drone
         self.client = client
-
         asyncio.ensure_future(
             self.get_position(swarm_telem, geodetic_ref),
             loop=event_loop,
@@ -90,12 +89,13 @@ class TelemetryUpdater:
         )
         asyncio.ensure_future(self.get_battery_level(), loop=event_loop)
         asyncio.ensure_future(self.get_flight_mode(swarm_telem), loop=event_loop)
+        asyncio.ensure_future(self.get_time(swarm_telem), loop=event_loop)
         time.sleep(10)
 
     async def get_position(self, swarm_telem, geodetic_ref):
         # set the rate of telemetry updates to 10Hz
         await self.drone.telemetry.set_rate_position(10)
-        async for position in self.drone.telemetry.position():
+        async for position in self.drone.telemetry.position(): # to get the position of the drone forever
 
             swarm_telem[self.id].geodetic = (
                 position.latitude_deg,
@@ -143,7 +143,7 @@ class TelemetryUpdater:
     async def get_velocity(self, swarm_telem):
         # set the rate of telemetry updates to 10Hz
         await self.drone.telemetry.set_rate_position_velocity_ned(10)
-        async for position_velocity_ned in self.drone.telemetry.position_velocity_ned():
+        async for position_velocity_ned in self.drone.telemetry.position_velocity_ned(): # to run the command self.drone.telemetry.position_velocity_ned() forever
             # changed from list to tuple so formatting for all messages is the same
             swarm_telem[self.id].velocity_ned = (
                 position_velocity_ned.velocity.north_m_s,
@@ -180,3 +180,9 @@ class TelemetryUpdater:
                 swarm_telem[self.id].flight_mode = str(flight_mode)
                 print(swarm_telem[self.id].flight_mode)
                 self.client.publish(self.id + "/flight_mode", str(flight_mode), qos=2)
+    async def get_time(self, swarm_telem):      
+        print('running time function')
+        async for obj_raw_gps in self.drone.telemetry.raw_gps(): # to run the command self.drone.telemetry.raw_gps() forever
+            swarm_telem[self.id].current_time=obj_raw_gps.timestamp_us
+
+            

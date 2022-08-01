@@ -2,8 +2,8 @@ from time import time
 import numpy as np
 import random
 import math
-from mavsdk.offboard import VelocityNedYaw
-
+from mavsdk.offboard import VelocityNedYaw, AccelerationNed, PositionNedYaw
+import pymap3d as pm
 
 def check_velocity(
     desired_vel, my_pos_vel, max_speed, yaw, time_step, max_accelleration
@@ -21,6 +21,49 @@ def check_velocity(
 
     # yaw = 0.0
     return VelocityNedYaw(desired_vel[0], desired_vel[1], desired_vel[2], yaw)
+
+def check_acceleration(
+    desired_acc, my_pos_vel, max_acc, yaw, time_step, max_accelleration
+):
+    # current_vel = np.array(my_pos_vel.velocity_ned)
+
+    # impose velocity limit
+    if np.linalg.norm(desired_acc) > max_acc:
+        desired_acc = desired_acc / np.linalg.norm(desired_acc) * max_acc
+    
+    print(desired_acc)
+    # impose accelleration limit
+    # output_vel = limit_accelleration(
+    #     desired_vel, current_vel, time_step, max_accelleration
+    # )
+
+    # yaw = 0.0
+    return AccelerationNed(desired_acc[0], desired_acc[1], desired_acc[2])
+
+def check_position(
+    desired_pos,my_pos_vel, max_speed, yaw, time_step, reference_point, home_position
+):
+    # current_vel = np.array(my_pos_vel.velocity_ned)
+
+    # impose velocity limi
+
+    # impose accelleration limit
+    # output_vel = limit_accelleration(
+    #     desired_vel, current_vel, time_step, max_accelleration
+    # )
+
+    # yaw = 0.0
+    home_ref_vector=pm.geodetic2ned(
+                reference_point[0],
+                reference_point[1],
+                reference_point[2],
+                home_position[0],
+                home_position[1],
+                home_position[2],
+            )
+    for i in range(3):
+        desired_pos[i]=desired_pos[i]+home_ref_vector[i] # to obtain the desired position with respect to the home point
+    return PositionNedYaw(desired_pos[0], desired_pos[1], desired_pos[2],0)
 
 
 # NOT NEEDED

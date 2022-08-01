@@ -4,6 +4,7 @@ import flocking
 from mavsdk import System
 from mavsdk.action import ActionError
 from mavsdk.offboard import OffboardError, VelocityNedYaw
+from mavsdk.telemetry import raw_gps# transfer it to onboard.py
 import pymap3d as pm
 from communication import DroneCommunication
 from data_structures import AgentTelemetry
@@ -64,7 +65,7 @@ class Experiment:
         return swarm_priorities
 
     def path_following(self, swarm_telem, max_speed, time_step, max_accel):
-
+        
         dis_vector=self.points-np.array(swarm_telem[self.id].position_ned, dtype="float64")
         limit_integral=1
         self.integ_error=self.integ_error+(dis_vector*time_step)
