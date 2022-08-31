@@ -13,7 +13,7 @@ from mavsdk.offboard import OffboardError, VelocityNedYaw
 import pymap3d as pm
 from communication import DroneCommunication
 from data_structures import AgentTelemetry
-from example_position import Experiment
+from experiment_example_position import Experiment
 import math
 import gtools
 import numpy as np

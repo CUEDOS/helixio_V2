@@ -4,7 +4,6 @@ import math
 import numpy as np
 from string import digits
 
-
 def only_numeric(input_string):
     output_string = "".join(c for c in input_string if c in digits)
     return output_string

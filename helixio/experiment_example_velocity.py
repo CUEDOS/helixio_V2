@@ -4,7 +4,6 @@ import math
 import numpy as np
 from string import digits
 
-
 def only_numeric(input_string):
     output_string = "".join(c for c in input_string if c in digits)
     return output_string
@@ -12,7 +11,7 @@ def only_numeric(input_string):
 class Experiment:
     def __init__(self, id, swarm_telem, experiment_file_path, home_lat, home_lon, home_alt, ref_lat, ref_lon, ref_alt) -> None:
         self.id = id # the id of the drone in its swarm
-        self.flight_mode="position"
+        self.flight_mode="velocity"
         self.prestart_position=[0, 0, 0]
         self.reference_point=[ref_lat, ref_lon, ref_alt]
         self.home_position=[home_lat, home_lon, home_alt]
@@ -48,14 +47,14 @@ class Experiment:
 
     def path_following(self, swarm_telem, max_speed, time_step, max_accel, mission_start_time): # method to run during the experiment
         mission_time=swarm_telem[self.id].current_time-mission_start_time # swarm_telem[self.id].current_time is the current time which is synchronous (from GPS)
-        # calculating the target position
+        
+        # calculating the target velocity
         if (mission_time<=self.travel_time/2.00):
-            target_position=[10 + self.prestart_position[0], 0 + self.prestart_position[1], -20]
+            target_velocity=[2, 0, 0]
         elif (mission_time<=self.travel_time):
-            target_position=[0 + self.prestart_position[0], 0+ self.prestart_position[1], -20]
+            target_velocity=[-2, 0, 0]
         else:
-            target_position=[0 + self.prestart_position[0], 0 + self.prestart_position[1], -20]
-        output_pos = flocking.check_position(target_position, swarm_telem[self.id], max_speed, 0, time_step, self.reference_point, self.home_position) # getting the target velocity in its right format
-        print(self.id, "current_position=", swarm_telem[self.id].position_ned)
-        print(self.id, "target_position=", target_position)
-        return output_pos # sending the target velocity
+            target_velocity=[0, 0, 0] # to stop the drone after travel_time
+        output_vel = flocking.check_velocity(target_velocity, swarm_telem[self.id], max_speed, 0, time_step, max_accel) # getting the target velocity in its right format
+        
+        return output_vel # sending the target velocity

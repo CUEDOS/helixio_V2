@@ -321,10 +321,10 @@ def visualize_ulg (**Input):  # input keyword arguments: ref_lat, ref_long, ref_
         legend=dict(itemsizing='constant',font=dict(family="Times New Roman",size=20), bgcolor="LightSteelBlue", bordercolor="Black", borderwidth=2),
         scene_aspectmode='manual',
         scene_aspectratio=dict(x=1, y=1, z=1), 
-        scene = dict(xaxis = dict(nticks=Ticks_num,range=[x_right_margin,x_left_margin]), yaxis = dict(nticks=Ticks_num, range=[y_up_margin,y_down_margin]),zaxis = dict(nticks=Ticks_num,range=[z_down_margin,z_up_margin])),
-        legend_title_text='Drones & traces'
+        scene = dict(xaxis = dict(title="East",nticks=Ticks_num,range=[x_right_margin,x_left_margin]), yaxis = dict(title="North",nticks=Ticks_num, range=[y_up_margin,y_down_margin]),zaxis = dict(title="Z",nticks=Ticks_num,range=[z_down_margin,z_up_margin])),
+        legend_title_text='Drones & traces',
         )
     fig.show()
      
-visualize_ulg(output_CSV_file_dir='/home/m74744sa/Desktop/All_csvs/Real_shot.csv',folder_of_ulg="/home/m74744sa/Desktop/July_5th_shot",ref_lat= 52.816522986211055, ref_long= -4.1271978280723225, ref_alt= 6,drone_size=15, ticks_num=10, sitl_or_real='real')
+visualize_ulg(output_CSV_file_dir='/home/m74744sa/Desktop/examp.csv',folder_of_ulg="/home/m74744sa/Desktop/examp/position",ref_lat= 52.816610, ref_long=  -4.125624, ref_alt= 18.5, drone_size=15, ticks_num=10, sitl_or_real='real')
 #visualize_ulg(output_CSV_file_dir='/path_to_csv_file/csv_file_name.csv', folder_of_ulg='/path_to_folder_containing_ulg_files',ref_lat=latitude of the reference point, ref_long= longitude of the reference point, ref_alt= altitude of the reference point,drone_size= size of drone, ticks_num=number of partitions in the final fig, frame_duration= duration of each frame of animation in seconds)
