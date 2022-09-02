@@ -292,7 +292,7 @@ class Agent:
             and self.experiment.ready_flag == True
         ):
             offboard_loop_start_time = time.time()
-            if self.experiment.flight_mode == "velocity":
+            if self.experiment.flight_mode == "velocity":             # for velocity mode
                 await self.drone.offboard.set_velocity_ned(
                     self.experiment.path_following(
                         self.swarm_manager.telemetry,
@@ -302,7 +302,7 @@ class Agent:
                         mission_start_time
                     )
                 )
-            elif self.experiment.flight_mode == "acceleration":
+            elif self.experiment.flight_mode == "acceleration":        # for acceleration mode
                 await self.drone.offboard.set_acceleration_ned(
                     self.experiment.path_following(
                         self.swarm_manager.telemetry,
@@ -312,8 +312,18 @@ class Agent:
                         mission_start_time
                     )
                 )
-            elif self.experiment.flight_mode=="position":
+            elif self.experiment.flight_mode=="position":               # for position mode
                 await self.drone.offboard.set_position_ned(
+                    self.experiment.path_following(
+                        self.swarm_manager.telemetry,
+                        self.max_speed,
+                        offboard_loop_duration,
+                        10,
+                        mission_start_time
+                    )
+                )
+            elif self.experiment.flight_mode=="position_velocity":     # for positoin velocity mode
+                await self.drone.offboard.set_position_velocity_ned(
                     self.experiment.path_following(
                         self.swarm_manager.telemetry,
                         self.max_speed,
